@@ -1,6 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import DiagnosisSkeleton from './DiagnosisSkeleton';
 
 interface Diagnosis {
   disease: string;
@@ -10,6 +16,7 @@ interface Diagnosis {
 
 export default function DiagnosisForm() {
   const [symptoms, setSymptoms] = useState('');
+  const [image, setImage] = useState<File | null>(null);
   const [diagnosis, setDiagnosis] = useState<Diagnosis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,12 +28,15 @@ export default function DiagnosisForm() {
     setDiagnosis(null);
 
     try {
+      const formData = new FormData();
+      formData.append('symptoms', symptoms);
+      if (image) {
+        formData.append('image', image);
+      }
+
       const response = await fetch('/api/diagnose', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ symptoms }),
+        body: formData,
       });
 
       if (!response.ok) {
@@ -43,52 +53,68 @@ export default function DiagnosisForm() {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-4 sm:p-6 md:p-8">
-      <h1 className="text-3xl font-bold text-center mb-6">Cat Disease Diagnosis</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="symptoms" className="block text-sm font-medium text-gray-700 mb-1">Enter Symptoms</label>
-          <textarea
-            id="symptoms"
-            value={symptoms}
-            onChange={(e) => setSymptoms(e.target.value)}
-            placeholder="e.g., sneezing, coughing, loss of appetite"
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-black transition-colors duration-200"
-            rows={5}
-            required
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full bg-black text-white py-3 rounded-md hover:bg-gray-800 disabled:bg-gray-400 transition-colors duration-200"
-        >
-          {isLoading ? 'Diagnosing...' : 'Get Diagnosis'}
-        </button>
-      </form>
+    <div className="w-full max-w-3xl mx-auto">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-3xl font-bold text-center">Cat Disease Diagnosis</CardTitle>
+          <CardDescription className="text-center">Enter your cat's symptoms and optionally upload an image for a more accurate diagnosis.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid w-full items-center gap-1.5">
+              <Label htmlFor="symptoms">Symptoms</Label>
+              <Textarea
+                id="symptoms"
+                value={symptoms}
+                onChange={(e) => setSymptoms(e.target.value)}
+                placeholder="e.g., sneezing, coughing, loss of appetite"
+                required
+              />
+            </div>
+            <div className="grid w-full max-w-sm items-center gap-1.5">
+              <Label htmlFor="image">Image (Optional)</Label>
+              <Input id="image" type="file" accept="image/*" onChange={(e) => setImage(e.target.files ? e.target.files[0] : null)} />
+            </div>
+            <Button type="submit" disabled={isLoading} className="w-full">
+              {isLoading ? 'Diagnosing...' : 'Get Diagnosis'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {isLoading && <DiagnosisSkeleton />}
 
       {error && (
-        <div className="mt-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md">
-          <p>{error}</p>
-        </div>
+        <Card className="mt-8 border-destructive">
+          <CardHeader>
+            <CardTitle className="text-destructive">Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>{error}</p>
+          </CardContent>
+        </Card>
       )}
 
       {diagnosis && (
-        <div className="mt-6 p-6 border border-gray-200 rounded-md bg-gray-50">
-          <h2 className="text-2xl font-semibold mb-4">Diagnosis Result</h2>
-          <div>
-            <h3 className="text-lg font-bold">Disease:</h3>
-            <p className="mb-3">{diagnosis.disease}</p>
-          </div>
-          <div>
-            <h3 className="text-lg font-bold">Description:</h3>
-            <p className="mb-3">{diagnosis.description}</p>
-          </div>
-          <div>
-            <h3 className="text-lg font-bold">Recommendation:</h3>
-            <p>{diagnosis.recommendation}</p>
-          </div>
-        </div>
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle>Diagnosis Result</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold text-muted-foreground">Disease</h3>
+              <p className="text-xl font-bold">{diagnosis.disease}</p>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-muted-foreground">Description</h3>
+              <p>{diagnosis.description}</p>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-muted-foreground">Recommendation</h3>
+              <p>{diagnosis.recommendation}</p>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
