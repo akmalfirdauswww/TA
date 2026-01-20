@@ -11,8 +11,8 @@ const About = () => {
             Our team of experienced veterinarians and staff are committed to providing comprehensive care for your pets. From wellness exams and vaccines to advanced diagnostics and complex surgical procedures, your pet will receive high-quality care at our hospital.
           </p>
         </div>
-        <div className="flex items-center justify-center">
-          <img src="/placeholder.svg" alt="A happy pet" className="rounded-lg" style={{ aspectRatio: '500/500', objectFit: 'cover' }} />
+        <div className="flex items-center justify-center bg-muted rounded-lg" style={{ aspectRatio: '500/500' }}>
+          <span className="text-muted-foreground text-lg">🐾</span>
         </div>
       </div>
     </section>
